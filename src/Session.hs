@@ -130,6 +130,13 @@ sessionRestart session@Session{..} = do
 --   added back in.
 sessionReload :: Session -> IO ([Load], [FilePath])
 sessionReload session@Session{..} = do
+    let killerScript = Just "ghcid-killer-script"
+    maybe (pure ())
+          (\ks -> do (_,_,_,p) <- createProcess $ shell ks
+                     void $ waitForProcess p
+          )
+          killerScript
+
     -- kill anything async, set stuck if you didn't succeed
     old <- modifyVar running $ \b -> return (False, b)
     stuck <- if not old then return False else do
